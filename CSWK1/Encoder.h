@@ -12,45 +12,52 @@ using namespace std;
 const int INPUTRANGE = 4;
 const int OUTPUTSIZE = 2;
 
-const string defSett1 = "1100";
-const string defSett2 = "0011";
-const string defFilepath = "../inputFile.txt";
-
 const bool xorOneRef = false;
 const bool xorTwoRef = true;
 
+typedef unsigned int uint;
 
 class Encoder {
 public:
-	Encoder(string xorSett1 = defSett1, string xorSett2 = defSett2, string filepath = defFilepath);
+	Encoder(string xorSett1 = defSett1, string xorSett2 = defSett2, string inFilepath = defInFilepath, string outFilepath = defOutFilepath);
 	~Encoder();
 
-	void EncoderCycle();	//cycle the encoder (run one cycle of encoding)
+	void RunEncoder();	//run the encoder!
+
 	void EncoderSetting(bool xorNum, string xorSett);	//change the xor gates inputs
 
+	void SetInputPath(string path);	//change where the data will be input from
+	void SetOutputPath(string path);	//change where the data will be output to
+
 private:
+	void EncoderCycle();	//cycle the encoder (run one cycle of encoding)
+
 	void XorGate1();	//activates xor gate 1
 	void XorGate2();	//activates xor gate 2
 	
-	void Initialise(); //clean out all registers and outputs
+	void InitialiseVars();		//clean out all registers and outputs
 	void RegisterCycle();	//move the data from each register across and read in the next input bit
-	bool ReadInData(string filepath);	//read in data from file
-
+	bool ReadInData();	//read in data from file
+	bool WriteOutData();	//print out currentOutput to file
 
 	bool registerArr[INPUTRANGE];	//the data stored in the registers (and the input bit)
 	bool currentOutput[OUTPUTSIZE];	//the bits to output
 
-	vector<bool> inputData;	//the actual data stream to input
-	int inputPos = 0;		//the current position of the bit to put into the input bit( registerArr[0] )
+	vector<bool> inputData;		//the actual data stream to input
+	vector<bool> outputData;	//the binary data to output
+	uint inputPos = 0;			//the current position of the bit to put into the input bit( registerArr[0] )
 
-	bool xor1Inputs[4];	//stores where xor gate 1 recieves input from
-	bool xor2Inputs[4];	//stores where xor gate 2 recieves input from
+	bool xor1Inputs[INPUTRANGE];		//stores where xor gate 1 recieves input from
+	bool xor2Inputs[INPUTRANGE];		//stores where xor gate 2 recieves input from
+
+	string inputFilepath;	//the path to output data to
+	string outputFilepath;	//the path to output data to
 
 
-
-	const static string defSett1;	//default input settings for xor gate 1
-	const static string defSett2;	//default input settings for xor gate 2
-	const static string defFilepath;
+	const static string defSett1;		//default input settings for xor gate 1
+	const static string defSett2;		//default input settings for xor gate 2
+	const static string defInFilepath;	//default input file location
+	const static string defOutFilepath;	//default input file location
 };
 
 

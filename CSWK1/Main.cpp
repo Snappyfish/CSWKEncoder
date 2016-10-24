@@ -17,7 +17,8 @@ int main() {
 		cout << "1: Change xor gate settings" << endl;
 		cout << "2: Change input file" << endl;
 		cout << "3: Change output file" << endl;
-		cout << "4: End program" << endl;
+		cout << "4: Run encoder on all possible permutations" << endl;
+		cout << "5: End program" << endl;
 
 		cin >> x;
 
@@ -26,6 +27,7 @@ int main() {
 		switch (x) {
 		case 0: //Run encoder
 			cout << endl << "Running encoder..." << endl;
+			encProg.RunEncoderPreStep();
 			encProg.RunEncoder();
 			break;
 
@@ -47,7 +49,7 @@ int main() {
 
 		case 2: //Change input file
 			cout << endl << "Where should file be input from?" << endl;
-			cin >> stringInput;
+			cin >> stringInput; 
 			encProg.SetInputPath(stringInput);
 			break;
 
@@ -55,6 +57,11 @@ int main() {
 			cout << endl << "Where should file be output to?" << endl;
 			cin >> stringInput;
 			encProg.SetOutputPath(stringInput);
+			break;
+
+		case 4: //Change output file
+			cout << endl << "Running all encoder permutations..." << endl;
+			encProg.RunEncoderFullCycle();
 			break;
 
 		default: //end program

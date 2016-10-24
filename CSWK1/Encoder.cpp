@@ -10,8 +10,8 @@ Encoder::Encoder(string xorSett1, string xorSett2, string inFilepath, string out
 
 
 	//set the default xor gate inputs
-	EncoderSetting(xorOneRef, xorSett1);
-	EncoderSetting(xorTwoRef, xorSett2);
+	EncoderSetting(XOR1REF, xorSett1);
+	EncoderSetting(XOR2REF, xorSett2);
 
 	//set file inputs/outputs
 	inputFilepath = inFilepath;
@@ -28,14 +28,17 @@ Encoder::~Encoder() {
 
 }
 
-void Encoder::RunEncoder() {
-	//first read in the data
+bool Encoder::RunEncoderPreStep() {
+	//read in the data
 	if (!ReadInData()) {	//file read in failed!
 		cout << "Reading in file failed! Aborting." << endl << endl;
-		return;
+		return false;
 	}
 
+	return true;
+}
 
+bool Encoder::RunEncoder(bool suppMsg) {
 	//then actually encode the data
 	int cycles = inputData.size();
 	for (int i = 0; i < cycles; i++) {
@@ -46,13 +49,45 @@ void Encoder::RunEncoder() {
 	//finally output data to file
 	if (!WriteOutData()) {	//file write out failed!
 		cout << "Write to file failed! Aborting." << endl << endl;
-		return;
+		return false;
 	}
 	
 
 	//and clean out the variables for cleanliness sake
 	InitialiseVars();
-	cout << "Encoding completed successfully. File \"" << outputFilepath << "\" has been written to." << endl;
+	if (!suppMsg) {
+		cout << "Encoding completed successfully. File \"" << outputFilepath << "\" has been written to." << endl;
+	}
+
+	return true;
+}
+
+void Encoder::RunEncoderFullCycle() {
+	if (!RunEncoderPreStep()) {
+		return;
+	}
+
+	//loop of (changing output file -> changing gate settings -> encode) to check every setting
+	for (int i = 0; i < MAXPERMU; i++) {	//for every gate 1 setting
+		for (int j = 0; j < MAXPERMU; j++) {	//for every gate 2 setting
+			string gate1Mask = bitset<4>(j).to_string();
+			string gate2Mask = bitset<4>(i).to_string();
+
+			SetOutputPath(OUTPUTDIR + gate1Mask + "-" + gate2Mask + FILEEXT);
+
+			EncoderSetting(XOR1REF, gate1Mask);
+			EncoderSetting(XOR2REF, gate2Mask);
+
+			//if it fails, stop the loop
+			if (!RunEncoder(true)) {
+				cout << "Encoding error! Aborting permutation loop." << endl;
+				return;
+			}
+
+		}
+	}
+
+
 
 }
 
@@ -90,15 +125,42 @@ void Encoder::SetOutputPath(string path) {
 	outputFilepath = path;
 }
 
+bool Encoder::EncoderCompare(string filepath1, string filepath2) {
+	ifstream f1stream(filepath1.c_str(), ios::in);
+	ifstream f2stream(filepath2.c_str(), ios::in);
+
+	if (!f1stream || !f2stream) {//Oh dear, it can't find the file :(
+		std::cout << "Aw nuts. No file to read in." << endl;
+		return false;
+	}
+
+	while (f1stream >> compChar1) {	//loop until it returns false (at eof)
+		if (f2stream >> compChar2) {	//if the char is read in properly
+			if (compChar1 != compChar2) {	//if char doesn't match
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+		
+
+
+
+	}
+
+	return true;
+}
+
 
 void Encoder::EncoderCycle() {
+
+	//cycle registers and input bit
+	RegisterCycle();
 
 	//process xor gates
 	XorGate1();
 	XorGate2();
-
-	//cycle registers and input bit
-	RegisterCycle();
 
 	//add to output vector
 	for (int i = 0; i < OUTPUTSIZE; i++) {
@@ -138,7 +200,7 @@ void Encoder::InitialiseVars() {
 	memset(registerArr, 0, sizeof(registerArr));
 	memset(currentOutput, 0, sizeof(currentOutput));
 
-	inputData.clear();
+	//inputData.clear();
 	outputData.clear();
 	inputPos = 0;
 
@@ -163,6 +225,7 @@ void Encoder::RegisterCycle() {
 
 //adapted from my game engine coursework last year
 bool Encoder::ReadInData() {
+
 	//clean out current stored data
 	inputData.clear();
 

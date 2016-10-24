@@ -10,10 +10,15 @@
 using namespace std;
 
 const int INPUTRANGE = 4;
+const int MAXPERMU = INPUTRANGE * INPUTRANGE;
 const int OUTPUTSIZE = 2;
 
-const bool xorOneRef = false;
-const bool xorTwoRef = true;
+const bool XOR1REF = false;
+const bool XOR2REF = true;
+
+const string OUTPUTDIR = ".\\output\\";
+const string FILEEXT = ".txt";
+
 
 typedef unsigned int uint;
 
@@ -22,12 +27,16 @@ public:
 	Encoder(string xorSett1 = defSett1, string xorSett2 = defSett2, string inFilepath = defInFilepath, string outFilepath = defOutFilepath);
 	~Encoder();
 
-	void RunEncoder();	//run the encoder!
+	bool RunEncoderPreStep();	//read in data
+	bool RunEncoder(bool suppMsg = false);	//run the encoder!
+	void RunEncoderFullCycle();	//run the encoder on every possible permutation
 
 	void EncoderSetting(bool xorNum, string xorSett);	//change the xor gates inputs
 
 	void SetInputPath(string path);	//change where the data will be input from
 	void SetOutputPath(string path);	//change where the data will be output to
+
+	bool EncoderCompare(string filepath1, string filepath2);	//compare two encoded files
 
 private:
 	void EncoderCycle();	//cycle the encoder (run one cycle of encoding)
@@ -52,6 +61,9 @@ private:
 
 	string inputFilepath;	//the path to output data to
 	string outputFilepath;	//the path to output data to
+
+	char compChar1;
+	char compChar2;
 
 
 	const static string defSett1;		//default input settings for xor gate 1

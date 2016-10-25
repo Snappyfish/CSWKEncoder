@@ -4,6 +4,7 @@ const string Encoder::defSett1 = "0011";
 const string Encoder::defSett2 = "1100";
 const string Encoder::defInFilepath = "binaryFile.txt";
 const string Encoder::defOutFilepath = "outputFile.txt";
+const string Encoder::defDuplFilepath = ".\\output\\duplicates.txt";
 
 
 Encoder::Encoder(string xorSett1, string xorSett2, string inFilepath, string outFilepath) {
@@ -67,13 +68,18 @@ void Encoder::RunEncoderFullCycle() {
 		return;
 	}
 
+	bool t = EncoderCompare("f1.txt", "f2.txt");
+	cout << t << endl;
+
 	//loop of (changing output file -> changing gate settings -> encode) to check every setting
 	for (int i = 0; i < MAXPERMU; i++) {	//for every gate 1 setting
 		for (int j = 0; j < MAXPERMU; j++) {	//for every gate 2 setting
 			string gate1Mask = bitset<4>(j).to_string();
 			string gate2Mask = bitset<4>(i).to_string();
+			string outputName = gate1Mask + "-" + gate2Mask;
+			string outputPath = OUTPUTDIR + outputName + FILEEXT;
 
-			SetOutputPath(OUTPUTDIR + gate1Mask + "-" + gate2Mask + FILEEXT);
+			SetOutputPath(outputPath);
 
 			EncoderSetting(XOR1REF, gate1Mask);
 			EncoderSetting(XOR2REF, gate2Mask);
@@ -84,9 +90,44 @@ void Encoder::RunEncoderFullCycle() {
 				return;
 			}
 
+			//duplicate check
+			bool checkIncomp = true;
+			for (uint k = 0; k < duplEncoders.size() && checkIncomp; k++) {
+				//cout << "Comp -> " << outputName << " and " << duplEncoders.at(k).at(0) << endl;
+				if (EncoderCompare(outputPath, OUTPUTDIR + duplEncoders.at(k).at(0) + FILEEXT)) {
+					duplEncoders.at(k).push_back(outputName);
+					checkIncomp = false;
+				}
+			}
+			if (checkIncomp) {
+				vector<string> temp = { outputName };
+				duplEncoders.push_back(temp);
+			}
+			
 		}
 	}
 
+	ofstream f(defDuplFilepath.c_str(), ios::out);
+
+	if (!f) {
+		cout << "Aw nuts. File output failed." << endl;
+		f.close();
+	}
+
+	f << "The following file contains sets of encoders that produce duplicate results." << endl << endl;
+
+	//
+	for (uint i = 0; i < duplEncoders.size(); i++) {
+		for (uint j = 0; j < duplEncoders.at(i).size(); j++) {
+			f << duplEncoders.at(i).at(j);
+			if (j != (duplEncoders.at(j).size() - 1)) {
+				f << " - ";
+			}
+		}
+		f << endl;
+	}
+
+	f.close();
 
 
 }
@@ -126,8 +167,12 @@ void Encoder::SetOutputPath(string path) {
 }
 
 bool Encoder::EncoderCompare(string filepath1, string filepath2) {
+	cnt++;
 	ifstream f1stream(filepath1.c_str(), ios::in);
 	ifstream f2stream(filepath2.c_str(), ios::in);
+
+	char compChar1;
+	char compChar2;
 
 	if (!f1stream || !f2stream) {//Oh dear, it can't find the file :(
 		std::cout << "Aw nuts. No file to read in." << endl;
@@ -135,18 +180,11 @@ bool Encoder::EncoderCompare(string filepath1, string filepath2) {
 	}
 
 	while (f1stream >> compChar1) {	//loop until it returns false (at eof)
-		if (f2stream >> compChar2) {	//if the char is read in properly
-			if (compChar1 != compChar2) {	//if char doesn't match
-				return false;
-			}
-		}
-		else {
+		f2stream >> compChar2;
+		if (compChar1 != compChar2) {	//if char doesn't match
 			return false;
 		}
 		
-
-
-
 	}
 
 	return true;
@@ -234,6 +272,7 @@ bool Encoder::ReadInData() {
 
 	if (!f) {//Oh dear, it can't find the file :(
 		cout << "Aw nuts. No file to read in." << endl;
+		f.close();
 		return false;
 	}
 	char currentChar;
@@ -251,6 +290,7 @@ bool Encoder::ReadInData() {
 
 	}
 
+	f.close();
 	cout << "Read in data successfully!" << endl;
 	return true;
 }
@@ -261,6 +301,7 @@ bool Encoder::WriteOutData() {
 
 	if (!f) {
 		cout << "Aw nuts. File output failed." << endl;
+		f.close();
 		return false;
 	}
 
@@ -270,5 +311,6 @@ bool Encoder::WriteOutData() {
 		f << outputData[i];
 	}
 
+	f.close();
 	return true;
 }

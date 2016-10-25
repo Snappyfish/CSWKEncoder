@@ -39,6 +39,8 @@ public:
 	bool EncoderCompare(string filepath1, string filepath2);	//compare two encoded files
 
 private:
+	int cnt = 0;
+
 	void EncoderCycle();	//cycle the encoder (run one cycle of encoding)
 
 	void XorGate1();	//activates xor gate 1
@@ -59,17 +61,16 @@ private:
 	bool xor1Inputs[INPUTRANGE];		//stores where xor gate 1 recieves input from
 	bool xor2Inputs[INPUTRANGE];		//stores where xor gate 2 recieves input from
 
-	string inputFilepath;	//the path to output data to
+	string inputFilepath;	//the path to read in from
 	string outputFilepath;	//the path to output data to
 
-	char compChar1;
-	char compChar2;
-
+	vector<vector<string>> duplEncoders;
 
 	const static string defSett1;		//default input settings for xor gate 1
 	const static string defSett2;		//default input settings for xor gate 2
 	const static string defInFilepath;	//default input file location
 	const static string defOutFilepath;	//default input file location
+	const static string defDuplFilepath;
 };
 
 

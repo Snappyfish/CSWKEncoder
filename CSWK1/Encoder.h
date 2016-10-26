@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <unordered_map>
 #include <vector>
 #include <fstream>
 #include <string>
@@ -22,6 +21,7 @@ const string FILEEXT = ".txt";
 
 typedef unsigned int uint;
 
+
 class Encoder {
 public:
 	Encoder(string xorSett1 = defSett1, string xorSett2 = defSett2, string inFilepath = defInFilepath, string outFilepath = defOutFilepath);
@@ -39,8 +39,6 @@ public:
 	bool EncoderCompare(string filepath1, string filepath2);	//compare two encoded files
 
 private:
-	int cnt = 0;
-
 	void EncoderCycle();	//cycle the encoder (run one cycle of encoding)
 
 	void XorGate1();	//activates xor gate 1

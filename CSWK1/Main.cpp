@@ -34,14 +34,14 @@ int main() {
 		case 1: //Change xor gate settings
 			cout << endl << "Which gate should be modified, 1 or 2?" << endl;
 			cin >> x;
-			cout << endl << "And what pattern should it be changed to? (E.g. \"0011\"" << endl;
+			cout << endl << "And what pattern should it be changed to? (E.g. \"0011\")" << endl;
 			cin >> stringInput;
 
 			if (x == 1) {
-				encProg.EncoderSetting(false, stringInput);
+				encProg.EncoderSetting(XOR1REF, stringInput);
 			}
 			else {
-				encProg.EncoderSetting(true, stringInput);
+				encProg.EncoderSetting(XOR2REF, stringInput);
 			}
 			
 			cout << endl << "Gate setting changed." << endl;

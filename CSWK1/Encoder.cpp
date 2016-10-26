@@ -167,7 +167,6 @@ void Encoder::SetOutputPath(string path) {
 }
 
 bool Encoder::EncoderCompare(string filepath1, string filepath2) {
-	cnt++;
 	ifstream f1stream(filepath1.c_str(), ios::in);
 	ifstream f2stream(filepath2.c_str(), ios::in);
 

@@ -9,8 +9,10 @@
 using namespace std;
 
 const int INPUTRANGE = 4;
+const int INPUTRANGEDECR = INPUTRANGE - 1;
 const int MAXPERMU = INPUTRANGE * INPUTRANGE;
 const int OUTPUTSIZE = 2;
+const int GATECOUNT = 2;
 
 const bool XOR1REF = false;
 const bool XOR2REF = true;
@@ -41,8 +43,7 @@ public:
 private:
 	void EncoderCycle();	//cycle the encoder (run one cycle of encoding)
 
-	void XorGate1();	//activates xor gate 1
-	void XorGate2();	//activates xor gate 2
+	void XorGate(int gateNum);	//activates a xor gate
 	
 	void InitialiseVars();		//clean out all registers and outputs
 	void RegisterCycle();	//move the data from each register across and read in the next input bit
@@ -56,19 +57,19 @@ private:
 	vector<bool> outputData;	//the binary data to output
 	uint inputPos = 0;			//the current position of the bit to put into the input bit( registerArr[0] )
 
-	bool xor1Inputs[INPUTRANGE];		//stores where xor gate 1 recieves input from
-	bool xor2Inputs[INPUTRANGE];		//stores where xor gate 2 recieves input from
+	bool xorInputs[GATECOUNT][INPUTRANGE];	//stores where xor gates recieve input from
 
 	string inputFilepath;	//the path to read in from
 	string outputFilepath;	//the path to output data to
 
 	vector<vector<string>> duplEncoders;
 
+
 	const static string defSett1;		//default input settings for xor gate 1
 	const static string defSett2;		//default input settings for xor gate 2
 	const static string defInFilepath;	//default input file location
 	const static string defOutFilepath;	//default input file location
-	const static string defDuplFilepath;
+	const static string defDuplFilepath;	//deafult duplicate description file output location
 };
 
 

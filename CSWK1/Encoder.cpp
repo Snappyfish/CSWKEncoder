@@ -25,7 +25,13 @@ Encoder::Encoder(string xorSett1, string xorSett2, string inFilepath, string out
 
 Encoder::~Encoder() {
 
-
+	//run clear() on all the vectors just to make sure they're empty
+	inputData.clear();
+	outputData.clear();
+	for (uint i = 0; i < duplEncoders.size(); i++) {
+		duplEncoders[i].clear();
+	}
+	duplEncoders.clear();
 
 }
 
@@ -40,8 +46,8 @@ bool Encoder::RunEncoderPreStep() {
 }
 
 bool Encoder::RunEncoder(bool suppMsg) {
-	//then actually encode the data
-	int cycles = inputData.size();
+	//run the encoder for inputdata's size +3 to completely flush the data through the registers
+	int cycles = inputData.size() + INPUTRANGEDECR;
 	for (int i = 0; i < cycles; i++) {
 		EncoderCycle();
 	}
@@ -68,20 +74,19 @@ void Encoder::RunEncoderFullCycle() {
 		return;
 	}
 
-	bool t = EncoderCompare("f1.txt", "f2.txt");
-	cout << t << endl;
+	cout << "Running..." << endl;
 
 	//loop of (changing output file -> changing gate settings -> encode) to check every setting
 	for (int i = 0; i < MAXPERMU; i++) {	//for every gate 1 setting
 		for (int j = 0; j < MAXPERMU; j++) {	//for every gate 2 setting
-			string gate1Mask = bitset<4>(j).to_string();
-			string gate2Mask = bitset<4>(i).to_string();
-			string outputName = gate1Mask + "-" + gate2Mask;
-			string outputPath = OUTPUTDIR + outputName + FILEEXT;
+			string gate1Mask = bitset<INPUTRANGE>(i).to_string();	//xor gate number 1's mask
+			string gate2Mask = bitset<INPUTRANGE>(j).to_string();	//and gate 2
+			string outputName = gate1Mask + "-" + gate2Mask;	//the name of the file to output
+			string outputPath = OUTPUTDIR + outputName + FILEEXT;	//and it's directory and extension
 
-			SetOutputPath(outputPath);
+			SetOutputPath(outputPath);	//set the output
 
-			EncoderSetting(XOR1REF, gate1Mask);
+			EncoderSetting(XOR1REF, gate1Mask);	//set the encoders to the correct masks
 			EncoderSetting(XOR2REF, gate2Mask);
 
 			//if it fails, stop the loop
@@ -92,13 +97,16 @@ void Encoder::RunEncoderFullCycle() {
 
 			//duplicate check
 			bool checkIncomp = true;
+			//for every encoder that's been generated so far
 			for (uint k = 0; k < duplEncoders.size() && checkIncomp; k++) {
-				//cout << "Comp -> " << outputName << " and " << duplEncoders.at(k).at(0) << endl;
+				//compare them to the current encoder's output
 				if (EncoderCompare(outputPath, OUTPUTDIR + duplEncoders.at(k).at(0) + FILEEXT)) {
+					//if they match, add the dupl. encoder's mask to the original's vector
 					duplEncoders.at(k).push_back(outputName);
 					checkIncomp = false;
 				}
 			}
+			//else add it as a new entry
 			if (checkIncomp) {
 				vector<string> temp = { outputName };
 				duplEncoders.push_back(temp);
@@ -107,19 +115,19 @@ void Encoder::RunEncoderFullCycle() {
 		}
 	}
 
+	//output the duplicate results to file!
 	ofstream f(defDuplFilepath.c_str(), ios::out);
 
 	if (!f) {
 		cout << "Aw nuts. File output failed." << endl;
 		f.close();
 	}
-
 	f << "The following file contains sets of encoders that produce duplicate results." << endl << endl;
 
-	//
+	//for every encoder and it's associated duplicate encoders
 	for (uint i = 0; i < duplEncoders.size(); i++) {
 		for (uint j = 0; j < duplEncoders.at(i).size(); j++) {
-			f << duplEncoders.at(i).at(j);
+			f << duplEncoders.at(i).at(j);	//print them out in a group
 			if (j != (duplEncoders.at(j).size() - 1)) {
 				f << " - ";
 			}
@@ -134,26 +142,12 @@ void Encoder::RunEncoderFullCycle() {
 
 
 void Encoder::EncoderSetting(bool xorNum, string xorSett) {
-	if (xorNum) {
-		for (int i = 0; i < INPUTRANGE; i++) {
-			char temp = xorSett.at(i);
-			if (temp == '0') {
-				xor1Inputs[i] = false;
-			}
-			else {
-				xor1Inputs[i] = true;
-			}
+	for (int i = 0; i < INPUTRANGE; i++) {
+		if (xorSett.at(i) == '0') {
+			xorInputs[xorNum][i] = false;
 		}
-	}
-	else {
-		for (int i = 0; i < INPUTRANGE; i++) {
-			char temp = xorSett.at(i);
-			if (temp == '0') {
-				xor2Inputs[i] = false;
-			}
-			else {
-				xor2Inputs[i] = true;
-			}
+		else {
+			xorInputs[xorNum][i] = true;
 		}
 	}
 
@@ -196,8 +190,8 @@ void Encoder::EncoderCycle() {
 	RegisterCycle();
 
 	//process xor gates
-	XorGate1();
-	XorGate2();
+	XorGate(XOR1REF);
+	XorGate(XOR2REF);
 
 	//add to output vector
 	for (int i = 0; i < OUTPUTSIZE; i++) {
@@ -208,28 +202,16 @@ void Encoder::EncoderCycle() {
 }
 
 
-void Encoder::XorGate1() {
+void Encoder::XorGate(int gateNum) {
 	int result = 0;
+	//loop through the inputs to the gate and increment the result if active
 	for (int i = 0; i < INPUTRANGE; i++) {
-		if (xor1Inputs[i])
+		if (xorInputs[gateNum][i])
 			result += (int)registerArr[i];
 	}
 
-	currentOutput[0] = bool(result % 2);
-
+	currentOutput[gateNum] = bool((result % 2) != 0);	//output to currentOutput
 }
-//code reuse? \/
-void Encoder::XorGate2() {
-	int result = 0;
-	for (int i = 0; i < INPUTRANGE; i++) {
-		if (xor2Inputs[i])
-			result += registerArr[i];
-	}
-
-	currentOutput[1] = bool(result % 2);
-
-}
-
 
 
 
@@ -237,21 +219,25 @@ void Encoder::InitialiseVars() {
 	memset(registerArr, 0, sizeof(registerArr));
 	memset(currentOutput, 0, sizeof(currentOutput));
 
-	//inputData.clear();
 	outputData.clear();
+	for (uint i = 0; i < duplEncoders.size(); i++) {
+		duplEncoders[i].clear();
+	}
+	duplEncoders.clear();
+
 	inputPos = 0;
 
 }
 
 void Encoder::RegisterCycle() {
-	//cycle registers
+	//cycle registers - shift them along
 	for (int i = (INPUTRANGE - 1); i > 0; i--) {
 		registerArr[i] = registerArr[i - 1];
 	}
 
 	//read input bit
 	if (inputPos < inputData.size()) {
-		registerArr[0] = inputData[inputPos];
+		registerArr[0] = inputData.at(inputPos);
 		inputPos++;
 	}
 	else {	//else it's hitting the padding at the end, so flush the data with 0's
@@ -260,7 +246,7 @@ void Encoder::RegisterCycle() {
 
 }
 
-//adapted from my game engine coursework last year
+//reads in data and warns if invalid chars are in the stream
 bool Encoder::ReadInData() {
 
 	//clean out current stored data
@@ -307,7 +293,7 @@ bool Encoder::WriteOutData() {
 	//take characters from outputData and print to file
 	uint dataSize = outputData.size();
 	for (uint i = 0; i < dataSize; i++) {
-		f << outputData[i];
+		f << outputData.at(i);
 	}
 
 	f.close();

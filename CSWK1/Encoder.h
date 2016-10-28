@@ -33,17 +33,17 @@ public:
 	bool RunEncoder(bool suppMsg = false);	//run the encoder!
 	void RunEncoderFullCycle();	//run the encoder on every possible permutation
 
-	void EncoderSetting(bool xorNum, string xorSett);	//change the xor gates inputs
+	void EncoderSetting(const bool &xorNum, const string &xorSett);	//change the xor gates inputs
 
 	void SetInputPath(string path);	//change where the data will be input from
 	void SetOutputPath(string path);	//change where the data will be output to
 
-	bool EncoderCompare(string filepath1, string filepath2);	//compare two encoded files
+	bool EncoderCompare(const string &filepath1, const string &filepath2);	//compare two encoded files
 
 private:
 	void EncoderCycle();	//cycle the encoder (run one cycle of encoding)
 
-	void XorGate(int gateNum);	//activates a xor gate
+	void XorGate(const int &gateNum);	//activates a xor gate
 	
 	void InitialiseVars();		//clean out all registers and outputs
 	void RegisterCycle();	//move the data from each register across and read in the next input bit
@@ -62,7 +62,7 @@ private:
 	string inputFilepath;	//the path to read in from
 	string outputFilepath;	//the path to output data to
 
-	vector<vector<string>> duplEncoders;
+	vector<vector<string>> duplEncoders;	//stores sets of encoder masks
 
 
 	const static string defSett1;		//default input settings for xor gate 1

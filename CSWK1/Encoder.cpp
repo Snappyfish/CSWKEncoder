@@ -141,7 +141,7 @@ void Encoder::RunEncoderFullCycle() {
 }
 
 
-void Encoder::EncoderSetting(bool xorNum, string xorSett) {
+void Encoder::EncoderSetting(const bool &xorNum, const string &xorSett) {
 	for (int i = 0; i < INPUTRANGE; i++) {
 		if (xorSett.at(i) == '0') {
 			xorInputs[xorNum][i] = false;
@@ -160,7 +160,7 @@ void Encoder::SetOutputPath(string path) {
 	outputFilepath = path;
 }
 
-bool Encoder::EncoderCompare(string filepath1, string filepath2) {
+bool Encoder::EncoderCompare(const string &filepath1, const string &filepath2) {
 	ifstream f1stream(filepath1.c_str(), ios::in);
 	ifstream f2stream(filepath2.c_str(), ios::in);
 
@@ -202,7 +202,7 @@ void Encoder::EncoderCycle() {
 }
 
 
-void Encoder::XorGate(int gateNum) {
+void Encoder::XorGate(const int &gateNum) {
 	int result = 0;
 	//loop through the inputs to the gate and increment the result if active
 	for (int i = 0; i < INPUTRANGE; i++) {
